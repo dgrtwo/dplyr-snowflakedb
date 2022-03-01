@@ -14,6 +14,7 @@ src_snowflakedb(
   opts = list(),
   region_id = "us-west",
   verbose = FALSE,
+  json = FALSE,
   ...
 )
 
@@ -38,6 +39,8 @@ is located. (Default: us-west, example: us-east-1).
 See: \url{https://docs.snowflake.net/manuals/user-guide/intro-editions.html#region-ids-in-account-urls}}
 
 \item{verbose}{Whether to display messages useful in debugging.}
+
+\item{json}{Whether to configure the return format to JSON (rather than arrow)}
 
 \item{...}{for the src, other arguments passed on to the underlying
 database connector, \code{dbConnect}. For the tbl, included for

@@ -59,6 +59,7 @@ setClass(
 #' is located. (Default: us-west, example: us-east-1). 
 #' See: \url{https://docs.snowflake.net/manuals/user-guide/intro-editions.html#region-ids-in-account-urls}
 #' @param verbose Whether to display messages useful in debugging.
+#' @param json Whether to configure the return format to JSON (rather than arrow)
 #' @param ... for the src, other arguments passed on to the underlying
 #'   database connector, \code{dbConnect}. For the tbl, included for
 #'   compatibility with the generic, but otherwise ignored.
@@ -158,6 +159,7 @@ src_snowflakedb <- function(user = NULL,
                             opts = list(),
                             region_id = "us-west",
                             verbose = FALSE,
+                            json = FALSE,
                             ...) {
   requireNamespace("RJDBC", quietly = TRUE)
   requireNamespace("dplyr", quietly = TRUE)
@@ -246,6 +248,12 @@ src_snowflakedb <- function(user = NULL,
       password,
       ...
     )
+  
+  # Switch from Arrow results to JSON
+  # See https://stackoverflow.com/a/70980334
+  if (json) {
+    dbGetQuery(conn, "ALTER SESSION SET JDBC_QUERY_RESULT_FORMAT='JSON'")
+  }
   
   res <- dbGetQuery(
     conn,
