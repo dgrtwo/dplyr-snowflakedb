@@ -14,7 +14,6 @@
 # limitations under the License.
 
 #' @import DBI
-#' @import rJava
 #' @import RJDBC
 #' @import dplyr
 NULL
@@ -194,8 +193,8 @@ src_snowflakedb <- function(user = NULL,
   )
   
   # initalize the JVM and set the snowflake properties
-  .jinit()
-  .jcall(
+  rJava::.jinit()
+  rJava::.jcall(
     "java/lang/System",
     "S",
     "setProperty",
