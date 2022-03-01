@@ -15,6 +15,7 @@ src_snowflakedb(
   region_id = "us-west",
   verbose = FALSE,
   json = FALSE,
+  auto_disconnect = TRUE,
   ...
 )
 

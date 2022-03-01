@@ -14,6 +14,7 @@
 # limitations under the License.
 
 #' @import DBI
+#' @import rJava
 #' @import RJDBC
 #' @import dplyr
 NULL
@@ -160,6 +161,7 @@ src_snowflakedb <- function(user = NULL,
                             region_id = "us-west",
                             verbose = FALSE,
                             json = FALSE,
+                            auto_disconnect = TRUE,
                             ...) {
   requireNamespace("RJDBC", quietly = TRUE)
   requireNamespace("dplyr", quietly = TRUE)
@@ -286,24 +288,7 @@ src_snowflakedb <- function(user = NULL,
   
   con <- structure(conn, info = info, class = c("SnowflakeDBConnection", "JDBCConnection"))
    
-  # Creates an environment that disconnects the database when it's
-  # garbage collected
-  db_disconnector <- function(con, name, quiet = FALSE) {
-    reg.finalizer(environment(), function(...) {
-      if (!quiet) {
-        message(
-          "Auto-disconnecting ",
-          name
-        )
-      }
-      dbDisconnect(con)
-    })
-    environment()
-  }
-  
-  dbplyr::src_sql("snowflakedb",
-                  con,
-                  disco = db_disconnector(con, "snowflakedb"))
+  dbplyr::src_sql("snowflakedb", con)
 }
 
 #' @export
