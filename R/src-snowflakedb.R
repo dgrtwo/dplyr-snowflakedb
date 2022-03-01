@@ -45,6 +45,8 @@ setClass(
   )
 }
 
+#' Initialize a Snowflake database
+#' 
 #' @template db-info
 #' @param user Username
 #' @param password Password
@@ -56,6 +58,7 @@ setClass(
 #' @param region_id Specifies the ID for the Snowflake Region where your account 
 #' is located. (Default: us-west, example: us-east-1). 
 #' See: \url{https://docs.snowflake.net/manuals/user-guide/intro-editions.html#region-ids-in-account-urls}
+#' @param verbose Whether to display messages useful in debugging.
 #' @param ... for the src, other arguments passed on to the underlying
 #'   database connector, \code{dbConnect}. For the tbl, included for
 #'   compatibility with the generic, but otherwise ignored.
@@ -154,6 +157,7 @@ src_snowflakedb <- function(user = NULL,
                             host = NULL,
                             opts = list(),
                             region_id = "us-west",
+                            verbose = FALSE,
                             ...) {
   requireNamespace("RJDBC", quietly = TRUE)
   requireNamespace("dplyr", quietly = TRUE)
@@ -207,7 +211,9 @@ src_snowflakedb <- function(user = NULL,
     opts <- ""
   }
   
-  message("host: ", host)
+  if (verbose) {
+    message("host: ", host)
+  }
   
   if (is.null(host) || host == "") {
     if (isWest)
@@ -225,7 +231,9 @@ src_snowflakedb <- function(user = NULL,
                 "/?account=",
                 account,
                 opts)
-  message("URL: ", url)
+  if (verbose) {
+    message("URL: ", url)
+  }
   conn <-
     dbConnect(
       RJDBC::JDBC(
@@ -238,6 +246,7 @@ src_snowflakedb <- function(user = NULL,
       password,
       ...
     )
+  
   res <- dbGetQuery(
     conn,
     'SELECT

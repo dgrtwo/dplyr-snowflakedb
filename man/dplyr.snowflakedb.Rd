@@ -3,8 +3,4 @@
 \docType{package}
 \name{dplyr.snowflakedb}
 \alias{dplyr.snowflakedb}
-\alias{dplyr.snowflakedb-package}
 \title{dplyr.snowflakedb: A SnowflakeDB backend for dplyr}
-\description{
-dplyr.snowflakedb: A SnowflakeDB backend for dplyr
-}
