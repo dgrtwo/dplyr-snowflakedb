@@ -45,6 +45,8 @@ setClass(
   )
 }
 
+#' Initialize a Snowflake database
+#' 
 #' @template db-info
 #' @param user Username
 #' @param password Password
@@ -56,6 +58,8 @@ setClass(
 #' @param region_id Specifies the ID for the Snowflake Region where your account 
 #' is located. (Default: us-west, example: us-east-1). 
 #' See: \url{https://docs.snowflake.net/manuals/user-guide/intro-editions.html#region-ids-in-account-urls}
+#' @param verbose Whether to display messages useful in debugging.
+#' @param json Whether to configure the return format to JSON (rather than arrow)
 #' @param ... for the src, other arguments passed on to the underlying
 #'   database connector, \code{dbConnect}. For the tbl, included for
 #'   compatibility with the generic, but otherwise ignored.
@@ -154,6 +158,9 @@ src_snowflakedb <- function(user = NULL,
                             host = NULL,
                             opts = list(),
                             region_id = "us-west",
+                            verbose = FALSE,
+                            json = FALSE,
+                            auto_disconnect = TRUE,
                             ...) {
   requireNamespace("RJDBC", quietly = TRUE)
   requireNamespace("dplyr", quietly = TRUE)
@@ -186,8 +193,8 @@ src_snowflakedb <- function(user = NULL,
   )
   
   # initalize the JVM and set the snowflake properties
-  .jinit()
-  .jcall(
+  rJava::.jinit()
+  rJava::.jcall(
     "java/lang/System",
     "S",
     "setProperty",
@@ -207,7 +214,9 @@ src_snowflakedb <- function(user = NULL,
     opts <- ""
   }
   
-  message("host: ", host)
+  if (verbose) {
+    message("host: ", host)
+  }
   
   if (is.null(host) || host == "") {
     if (isWest)
@@ -225,7 +234,9 @@ src_snowflakedb <- function(user = NULL,
                 "/?account=",
                 account,
                 opts)
-  message("URL: ", url)
+  if (verbose) {
+    message("URL: ", url)
+  }
   conn <-
     dbConnect(
       RJDBC::JDBC(
@@ -238,6 +249,13 @@ src_snowflakedb <- function(user = NULL,
       password,
       ...
     )
+  
+  # Switch from Arrow results to JSON
+  # See https://stackoverflow.com/a/70980334
+  if (json) {
+    dbGetQuery(conn, "ALTER SESSION SET JDBC_QUERY_RESULT_FORMAT='JSON'")
+  }
+  
   res <- dbGetQuery(
     conn,
     'SELECT
@@ -269,24 +287,7 @@ src_snowflakedb <- function(user = NULL,
   
   con <- structure(conn, info = info, class = c("SnowflakeDBConnection", "JDBCConnection"))
    
-  # Creates an environment that disconnects the database when it's
-  # garbage collected
-  db_disconnector <- function(con, name, quiet = FALSE) {
-    reg.finalizer(environment(), function(...) {
-      if (!quiet) {
-        message(
-          "Auto-disconnecting ",
-          name
-        )
-      }
-      dbDisconnect(con)
-    })
-    environment()
-  }
-  
-  dbplyr::src_sql("snowflakedb",
-                  con,
-                  disco = db_disconnector(con, "snowflakedb"))
+  dbplyr::src_sql("snowflakedb", con)
 }
 
 #' @export
